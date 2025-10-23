@@ -170,14 +170,13 @@ document.addEventListener('DOMContentLoaded', function() {
     //agregarFamiliar();
 });
 
-// FUNCIÓN PARA ENVIAR A GOOGLE SHEETS
 async function enviarAGoogleSheets(datos) {
-    // 🔥 REEMPLAZA con tu URL de Google Apps Script
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKBLd3YcihDvieSf8eX21iB4M1YSCbBHzPYE9CpeCeKJu0qnFTQP8RDhUDfDl0ceipaw/exec';
+    // 🔥 Usar la API de Vercel en lugar de Google Apps Script
+    const API_URL = '/api/guardar-datos';
     
     console.log('📤 Enviando datos:', datos);
     
-    const response = await fetch(SCRIPT_URL, {
+    const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -188,14 +187,14 @@ async function enviarAGoogleSheets(datos) {
     console.log('📥 Respuesta recibida:', response);
 
     if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        throw new Error(`Error HTTP: ${response.status}`);
     }
 
     const result = await response.json();
     console.log('📋 Resultado:', result);
     
     if (!result.success) {
-        throw new Error(result.error || 'Error desconocido del servidor');
+        throw new Error(result.error || 'Error del servidor');
     }
 
     return result;
