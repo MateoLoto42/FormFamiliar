@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Grupo Familiar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Formulario Grupo Familiar</h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- FORM -->
+                        <form id="formulario-familiar">
+                            <!-- Datos Titular -->
+                            <div class="mb-4">
+                                <h4 class="border-bottom pb-2">Datos del Titular</h4>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" name="nombre_titular" placeholder="Nombre" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" name="apellido_titular" placeholder="Apellido" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="number" class="form-control" name="dni_titular" placeholder="DNI" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="email" class="form-control" name="email_titular" placeholder="Email" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Familiares Dinámicos -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="mb-0">Grupo Familiar</h4>
+                                    <button type="button" id="agregar-familiar" class="btn btn-success btn-sm">
+                                        + Agregar Familiar
+                                    </button>
+                                </div>
+                                <div id="contenedor-familiares">
+                                    <!-- Familiares se agregan aquí dinámicamente -->
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100">Enviar a Google Sheets</button>
+                        </form>
+
+                        <!-- Agregamos un div para mostrar mensajes -->
+                        <div id="mensaje" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="variacion.js"></script>
+</body>
+</html>
