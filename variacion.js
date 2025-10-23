@@ -1,10 +1,13 @@
 let contadorFamiliares = 0;
+let totalRegistros = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
     const btnAgregar = document.getElementById('agregar-familiar');
+    const btnDescargar = document.getElementById('descargar-excel');
     const contenedor = document.getElementById('contenedor-familiares');
     const formulario = document.getElementById('formulario-familiar');
     const mensajeDiv = document.getElementById('mensaje');
+    const totalRegistrosSpan = document.getElementById('total-registros');
 
     function agregarFamiliar() {
         contadorFamiliares++;
@@ -34,6 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             <option value="Hijo/a">Hijo/a</option>
                             <option value="Padre">Padre</option>
                             <option value="Madre">Madre</option>
+                            <option value="Hermano/a">Hermano/a</option>
+                            <option value="Abuelo/a">Abuelo/a</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -64,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
         contadorFamiliares = familiares.length;
     }
 
+    // Guardar datos
     formulario.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -88,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        mostrarMensaje('🔄 Enviando datos...', 'info');
+        mostrarMensaje('🔄 Guardando datos...', 'info');
 
         try {
             const response = await fetch('/api/guardar', {
@@ -103,6 +109,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (result.success) {
                 mostrarMensaje('✅ ' + result.message, 'success');
+                totalRegistros = result.totalRegistros;
+                totalRegistrosSpan.textContent = totalRegistros;
+                
+                // Limpiar formulario
                 formulario.reset();
                 contenedor.innerHTML = '';
                 contadorFamiliares = 0;
@@ -115,9 +125,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Descargar Excel
+    btnDescargar.addEventListener('click', function() {
+        if (totalRegistros === 0) {
+            mostrarMensaje('ℹ️ No hay datos para descargar', 'info');
+            return;
+        }
+
+        window.open('/api/descargar', '_blank');
+        mostrarMensaje('📥 Descargando Excel...', 'info');
+    });
+
     function mostrarMensaje(mensaje, tipo) {
         mensajeDiv.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
     }
 
+    // Agregar primer familiar
     agregarFamiliar();
 });

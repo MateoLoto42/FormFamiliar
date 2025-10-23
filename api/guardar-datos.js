@@ -1,7 +1,7 @@
-import fetch from 'node-fetch';
+// Simulamos una "base de datos" en memoria
+let datosGuardados = [];
 
 export default async function handler(req, res) {
-  // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -16,29 +16,37 @@ export default async function handler(req, res) {
 
   try {
     const datos = req.body;
+    const timestamp = new Date();
     
-    // 🔥 CONFIGURA ESTO: Tu Google Apps Script URL
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby4V2YugCSurfIhvoKFr9YJiM6xarag_JapZqUTWhX08Qt-FaYqOqA6yOLzixHgaa-vWw/exec';
-    
-    // Enviar datos a Google Apps Script
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(datos)
+    // 🔥 MEJORA: Cada familiar en una fila SEPARADA con mismos datos del titular
+    const nuevosRegistros = datos.familiares.map(familiar => {
+      return {
+        id: timestamp.getTime() + Math.random(), // ID único
+        timestamp: timestamp.toISOString(),
+        fecha_legible: timestamp.toLocaleString('es-AR'),
+        titular_nombre: datos.titular.nombre,
+        titular_apellido: datos.titular.apellido,
+        titular_dni: datos.titular.dni,
+        titular_email: datos.titular.email,
+        familiar_nombre: familiar.nombre,
+        familiar_apellido: familiar.apellido,
+        familiar_dni: familiar.dni || '',
+        parentesco: familiar.parentesco,
+        edad: familiar.edad || ''
+      };
     });
 
-    const result = await response.text();
-    
-    if (response.ok) {
-      res.status(200).json({ 
-        success: true, 
-        message: 'Datos guardados en Google Sheets correctamente' 
-      });
-    } else {
-      throw new Error(result);
-    }
+    // Agregar todos los nuevos registros
+    datosGuardados.push(...nuevosRegistros);
+
+    console.log(`✅ Guardados ${nuevosRegistros.length} registros. Total en sistema: ${datosGuardados.length}`);
+
+    res.status(200).json({ 
+      success: true, 
+      message: `Se guardaron ${datos.familiares.length} familiar(es) correctamente`,
+      totalRegistros: datosGuardados.length,
+      detalles: `Titular: ${datos.titular.nombre} ${datos.titular.apellido}`
+    });
 
   } catch (error) {
     console.error('Error:', error);
@@ -48,3 +56,6 @@ export default async function handler(req, res) {
     });
   }
 }
+
+// Exportamos los datos para que la otra API pueda acceder
+export { datosGuardados };

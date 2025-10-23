@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/guardar.js",
+      "src": "api/*.js",
       "use": "@vercel/node"
     },
     {
@@ -13,8 +13,11 @@
   "routes": [
     {
       "src": "/api/guardar",
-      "dest": "/api/guardar.js",
-      "methods": ["POST", "OPTIONS"]
+      "dest": "/api/guardar.js"
+    },
+    {
+      "src": "/api/descargar",
+      "dest": "/api/descargar.js"
     },
     {
       "src": "/(.*)",
