@@ -1,17 +1,8 @@
 {
   "name": "formulario-familiar",
   "version": "1.0.0",
-  "type":"module",
-  "description": "Formulario para grupo familiar con Google Sheets",
-  "main": "index.html",
-  "scripts": {
-    "dev": "vercel dev"
-  },
+  "type": "module",
   "dependencies": {
-    "googleapis": "^126.0.1",
-    "@vercel/node":"^2.0.0"
-  },
-  "keywords": ["formulario", "google-sheets", "familia"],
-  "author": "Mateo Loto",
-  "license": "MIT"
+    "node-fetch": "^3.3.2"
+  }
 }

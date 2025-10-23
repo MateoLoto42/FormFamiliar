@@ -1,3 +1,5 @@
+import fetch from 'node-fetch';
+
 export default async function handler(req, res) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,22 +15,36 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('✅ API funcionando - Datos recibidos');
-    
     const datos = req.body;
-    console.log('Datos del formulario:', JSON.stringify(datos, null, 2));
-
-    // Simular éxito por ahora
-    res.status(200).json({ 
-      success: true, 
-      message: `✅ Prueba exitosa! Se recibieron datos de ${datos.titular.nombre} ${datos.titular.apellido} con ${datos.familiares.length} familiar(es)`
+    
+    // 🔥 CONFIGURA ESTO: Tu Google Apps Script URL
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKBLd3YcihDvieSf8eX21iB4M1YSCbBHzPYE9CpeCeKJu0qnFTQP8RDhUDfDl0ceipaw/exec';
+    
+    // Enviar datos a Google Apps Script
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(datos)
     });
 
+    const result = await response.text();
+    
+    if (response.ok) {
+      res.status(200).json({ 
+        success: true, 
+        message: 'Datos guardados en Google Sheets correctamente' 
+      });
+    } else {
+      throw new Error(result);
+    }
+
   } catch (error) {
-    console.error('❌ Error en API:', error);
+    console.error('Error:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Error interno: ' + error.message 
+      error: 'Error al guardar los datos: ' + error.message 
     });
   }
 }
