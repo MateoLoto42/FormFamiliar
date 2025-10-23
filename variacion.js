@@ -119,5 +119,5 @@ document.addEventListener('DOMContentLoaded', function() {
         mensajeDiv.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
     }
 
-    //agregarFamiliar();
+    agregarFamiliar();
 });
