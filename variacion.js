@@ -10,11 +10,13 @@ document.addEventListener('DOMContentLoaded', function() {
         contadorFamiliares++;
         
         const nuevoFamiliar = document.createElement('div');
-        nuevoFamiliar.className = 'card mb-3';
+        nuevoFamiliar.className = 'card mb-3 familiar-card';
         nuevoFamiliar.innerHTML = `
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Familiar ${contadorFamiliares}</h6>
-                <button type="button" class="btn btn-danger btn-sm eliminar-familiar">Eliminar</button>
+            <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                <h6 class="mb-0">👤 Familiar ${contadorFamiliares}</h6>
+                <button type="button" class="btn btn-outline-danger btn-sm eliminar-familiar">
+                    🗑️ Eliminar
+                </button>
             </div>
             <div class="card-body">
                 <div class="row g-3">
@@ -36,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <option value="Madre">Madre</option>
                             <option value="Hermano/a">Hermano/a</option>
                             <option value="Abuelo/a">Abuelo/a</option>
+                            <option value="Otro">Otro</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -46,81 +49,121 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         contenedor.appendChild(nuevoFamiliar);
+        
+        // Hacer scroll al nuevo familiar
+        nuevoFamiliar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     btnAgregar.addEventListener('click', agregarFamiliar);
 
     contenedor.addEventListener('click', function(e) {
         if (e.target.classList.contains('eliminar-familiar')) {
-            e.target.closest('.card').remove();
-            actualizarNumerosFamiliares();
+            if (document.querySelectorAll('.familiar-card').length > 1) {
+                e.target.closest('.familiar-card').remove();
+                actualizarNumerosFamiliares();
+            } else {
+                mostrarMensaje('❌ Debe haber al menos un familiar', 'warning');
+            }
         }
     });
 
     function actualizarNumerosFamiliares() {
-        const familiares = document.querySelectorAll('.card.mb-3');
+        const familiares = document.querySelectorAll('.familiar-card');
         familiares.forEach((familiar, index) => {
             const titulo = familiar.querySelector('h6');
-            titulo.textContent = `Familiar ${index + 1}`;
+            titulo.textContent = `👤 Familiar ${index + 1}`;
         });
         contadorFamiliares = familiares.length;
     }
 
-    // MANEJAR ENVÍO A GOOGLE SHEETS
+    // Manejar envío del formulario
     formulario.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Validar que haya al menos un familiar
+        // Validaciones
         if (contadorFamiliares === 0) {
-            mostrarMensaje('Por favor agregue al menos un familiar', 'danger');
+            mostrarMensaje('❌ Por favor agregue al menos un familiar', 'danger');
             return;
         }
 
         const datos = {
             titular: {
-                nombre: document.querySelector('input[name="nombre_titular"]').value,
-                apellido: document.querySelector('input[name="apellido_titular"]').value,
-                dni: document.querySelector('input[name="dni_titular"]').value,
-                email: document.querySelector('input[name="email_titular"]').value
+                nombre: document.querySelector('input[name="nombre_titular"]').value.trim(),
+                apellido: document.querySelector('input[name="apellido_titular"]').value.trim(),
+                dni: document.querySelector('input[name="dni_titular"]').value.trim(),
+                email: document.querySelector('input[name="email_titular"]').value.trim()
             },
             familiares: []
         };
 
+        // Validar datos del titular
+        if (!datos.titular.nombre || !datos.titular.apellido || !datos.titular.dni) {
+            mostrarMensaje('❌ Complete todos los datos del titular', 'danger');
+            return;
+        }
+
         // Recoger datos de familiares
-        document.querySelectorAll('.card.mb-3').forEach(familiar => {
+        let hayErrores = false;
+        document.querySelectorAll('.familiar-card').forEach((familiar, index) => {
             const inputs = familiar.querySelectorAll('input, select');
+            const nombre = inputs[0].value.trim();
+            const apellido = inputs[1].value.trim();
+            const parentesco = inputs[3].value;
+            
+            if (!nombre || !apellido || !parentesco) {
+                hayErrores = true;
+                mostrarMensaje(`❌ Complete todos los campos del Familiar ${index + 1}`, 'danger');
+                return;
+            }
+            
             datos.familiares.push({
-                nombre: inputs[0].value,
-                apellido: inputs[1].value,
-                dni: inputs[2].value,
-                parentesco: inputs[3].value,
+                nombre: nombre,
+                apellido: apellido,
+                dni: inputs[2].value.trim(),
+                parentesco: parentesco,
                 edad: inputs[4].value
             });
         });
 
-        // Mostrar loading
-        mostrarMensaje('🔄 Enviando datos a Google Sheets...', 'info');
+        if (hayErrores) return;
+
+        // Deshabilitar botón para evitar múltiples envíos
+        const submitBtn = formulario.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '🔄 Enviando...';
+        submitBtn.disabled = true;
 
         try {
-            await enviarAGoogleSheets(datos);
-            mostrarMensaje('✅ Datos guardados en Google Sheets correctamente!', 'success');
+            mostrarMensaje('🔄 Enviando datos a Google Sheets...', 'info');
+            
+            const resultado = await enviarAGoogleSheets(datos);
+            
+            mostrarMensaje(`✅ ${resultado.message}`, 'success');
             
             // Limpiar formulario después de 2 segundos
             setTimeout(() => {
                 formulario.reset();
                 contenedor.innerHTML = '';
                 contadorFamiliares = 0;
-                agregarFamiliar(); // Agregar primer familiar nuevamente
+                agregarFamiliar();
                 mensajeDiv.innerHTML = '';
             }, 2000);
             
         } catch (error) {
+            console.error('Error completo:', error);
             mostrarMensaje(`❌ Error: ${error.message}`, 'danger');
+        } finally {
+            // Rehabilitar botón
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         }
     });
 
     function mostrarMensaje(mensaje, tipo) {
-        mensajeDiv.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+        mensajeDiv.innerHTML = `<div class="alert alert-${tipo} alert-dismissible fade show">
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
     }
 
     // Agregar primer familiar automáticamente
@@ -129,8 +172,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // FUNCIÓN PARA ENVIAR A GOOGLE SHEETS
 async function enviarAGoogleSheets(datos) {
-    // 🔥 IMPORTANTE: Reemplaza esta URL con la de tu Google Apps Script
+    // 🔥 REEMPLAZA con tu URL de Google Apps Script
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwKBLd3YcihDvieSf8eX21iB4M1YSCbBHzPYE9CpeCeKJu0qnFTQP8RDhUDfDl0ceipaw/exec';
+    
+    console.log('📤 Enviando datos:', datos);
     
     const response = await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -140,14 +185,17 @@ async function enviarAGoogleSheets(datos) {
         body: JSON.stringify(datos)
     });
 
+    console.log('📥 Respuesta recibida:', response);
+
     if (!response.ok) {
-        throw new Error('Error al enviar los datos al servidor');
+        throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
     }
 
     const result = await response.json();
+    console.log('📋 Resultado:', result);
     
     if (!result.success) {
-        throw new Error(result.error || 'Error desconocido');
+        throw new Error(result.error || 'Error desconocido del servidor');
     }
 
     return result;
